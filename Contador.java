@@ -1,6 +1,7 @@
 package threads;
 
-import static java.lang.Thread.sleep;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -10,20 +11,38 @@ import java.util.logging.Logger;
  */
 public class Contador implements Runnable{
     private Armazem arm;
+   
 
     public Contador(Armazem arm) {
         this.arm=arm;
+        
     }
 
     @Override
-    public void run() {
+    public synchronized void run() {
         for(int i=0;i<100;i++){
-            arm.setNumero(i);
+            arm.getLock().lock();
+            
+            
             try {
-                sleep(3000);
+                while(arm.getTipoUmMutex() == 1){
+                    arm.foiImpresso.await();
+                }
+                arm.setNumero(i);
+                arm.foiGerado.signal();
+                
+                
             } catch (InterruptedException ex) {
                 Logger.getLogger(Contador.class.getName()).log(Level.SEVERE, null, ex);
             }
+            finally{
+                arm.setTipoUmMutex(1);
+                arm.getLock().unlock();
+            }
+            
+            
+            
+            
         }
     } 
     

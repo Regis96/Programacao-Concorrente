@@ -16,15 +16,31 @@ public class Impressora implements Runnable{
     }
     
     @Override
-    public void run(){
+    public synchronized void run(){
         for(int i =0;i<100;i++){
-            System.out.println(arm.getNumero());
-            try {
-                sleep(3000);
-            } catch (InterruptedException ex) {
-                Logger.getLogger(Impressora.class.getName()).log(Level.SEVERE, null, ex);
+            
+            arm.getLock().lock();
+            try{
+                while(arm.getTipoUmMutex() == 0){
+                    arm.foiGerado.await();
+                }
+                
+                System.out.println(arm.getNumero());
+                arm.foiImpresso.signal();
             }
-        }
+            catch (InterruptedException ex) {
+                Logger.getLogger(Contador.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            finally{
+                arm.setTipoUmMutex(0);
+                arm.getLock().unlock();
+            }
+            
+            
+            
+                
+           }
+            
         
     }
 }
